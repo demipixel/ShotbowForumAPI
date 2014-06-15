@@ -104,7 +104,7 @@ class Forum {
 	function getThread($i) { // Returns thread at index. WILL RETURN FALSE IF NO SUCH INDEX
 		$this->scan(); // Scan page if not already. You really shouldn't get an index without scanning the page first anyway...
 		if ($threadList[$i]) return $threadList[$i];
-		else return false;
+		else return null;
 	}
 	
 

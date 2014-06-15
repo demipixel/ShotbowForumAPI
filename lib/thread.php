@@ -61,6 +61,12 @@ class Thread {
 		return $this->posts;
 	}
 	
+	function getPost($i) {
+		$this->scan();
+		if ($this->posts[$i]) return $this->posts[$i];
+		else return null;
+	}
+	
 }
 
 class Page {
