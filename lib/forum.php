@@ -1,9 +1,9 @@
 <?
 
 // There MUST be a better way to do this. I might re-write it later...
-$strSplit = Array();
+$strSplitForum = Array();
 for ($i=0;$i<10;$i++) { // 9 for all variables of threadView
-	$strSplit[$i] = Array();
+	$strSplitForum[$i] = Array();
 }
 /*
 MAIN:
@@ -17,36 +17,36 @@ SECONDARY: 0 = Before, 1 = After
 
 */
 
-$strSplit[0][0] = "data-diff=\""; // Data-Diff since there is no display for "data-time"
-$strSplit[0][1] = "\""; 
-$strSplit[1][0] = "title=\"Thread starter\">";
-$strSplit[1][1] = "<";
-$strSplit[2][0] = "/preview\">";
-$strSplit[2][1] = "<";
-$strSplit[3][0] = "Replies:</dt> <dd>";
-$strSplit[3][1] = "<";
-$strSplit[4][0] = "Views:</dt> <dd>";
-$strSplit[4][1] = "<";
-$strSplit[5][0] = "class=\"username\">";
-$strSplit[5][1] = "<";
-$strSplit[6][0] = "data-time=\"";
-$strSplit[6][1] = "\"";
-$strSplit[7][0] = ""; // Not used since determined by strstr()
-$strSplit[7][1] = ""; //
-$strSplit[8][0] = ""; //
-$strSplit[8][1] = ""; //
-$strSplit[9][0] = "thread-";
-$strSplit[9][1] = "\"";
-$strSplit[10][0] = "members/"; // Warning, based on function taking first choice of options. Others of this string appear
-$strSplit[10][1] = "/";
-$strSplit[11][0] = "<dt><a href=\"";
-$strSplit[11][1] = "/";
-$strSplit[12][0] = "Show only threads prefixed by '";
-$strSplit[12][1] = "'";
-$strSplit[13][0] = "<li id=\"";
-$strSplit[13][1] = "</li>";
+$strSplitForum[0][0] = "data-diff=\""; // Data-Diff since there is no display for "data-time"
+$strSplitForum[0][1] = "\""; 
+$strSplitForum[1][0] = "title=\"Thread starter\">";
+$strSplitForum[1][1] = "<";
+$strSplitForum[2][0] = "/preview\">";
+$strSplitForum[2][1] = "<";
+$strSplitForum[3][0] = "Replies:</dt> <dd>";
+$strSplitForum[3][1] = "<";
+$strSplitForum[4][0] = "Views:</dt> <dd>";
+$strSplitForum[4][1] = "<";
+$strSplitForum[5][0] = "class=\"username\">";
+$strSplitForum[5][1] = "<";
+$strSplitForum[6][0] = "data-time=\"";
+$strSplitForum[6][1] = "\"";
+$strSplitForum[7][0] = ""; // Not used since determined by strstr()
+$strSplitForum[7][1] = ""; //
+$strSplitForum[8][0] = ""; //
+$strSplitForum[8][1] = ""; //
+$strSplitForum[9][0] = "thread-";
+$strSplitForum[9][1] = "\"";
+$strSplitForum[10][0] = "members/"; // Warning, based on function taking first choice of options. Others of this string appear
+$strSplitForum[10][1] = "/";
+$strSplitForum[11][0] = "<dt><a href=\"";
+$strSplitForum[11][1] = "/";
+$strSplitForum[12][0] = "Show only threads prefixed by '";
+$strSplitForum[12][1] = "'";
+$strSplitForum[13][0] = "<li id=\"";
+$strSplitForum[13][1] = "</li>";
 
-class forum {
+class Forum {
 	
 	private $url = ""; // Stores page it's getting data from. Use a new forum object for new pages
 	private $threadList = Array(); // Array of threadView objects
@@ -56,24 +56,25 @@ class forum {
 		$this->url = $url;
 	}
 	
-	function scanPage() { // Scans page for threads, using getAllThreads() will do this automatically
-		global $strSplit;
-		$scanned = true;
+	function scan() { // Scans page for threads, using getAllThreads() will do this automatically
+		global $strSplitForum;
+    	if ($this->scanned == true) return;
+		$this->scanned = true;
 		$contents = file_get_contents($this->url);
-		$threadStart = explode($strSplit[13][0], $contents); // Gets array, split at start of thread HTML
+		$threadStart = explode($strSplitForum[13][0], $contents); // Gets array, split at start of thread HTML
 		$allThreads = Array();
 		array_shift($threadStart); // Removes preceding HTML, nothing to do with threads
 		array_pop($threadStart); // Removes last one
 		foreach ($threadStart as $index => $threadHTML) {
-			$threadEnd = explode($strSplit[13][1], $threadStart[$index]); // Scrape off ending
+			$threadEnd = explode($strSplitForum[13][1], $threadStart[$index]); // Scrape off ending
 			array_push($allThreads,$threadEnd[0]); // Add to $allThreads only the part we didn't scrape
 		}
 		
-		foreach ($allThreads as $index => $threadHTML) {
+		foreach ($allThreads as $ind => $threadHTML) {
 			$cont = Array();
 			if (strstr($threadHTML,"Redirect")) continue;
 			
-			foreach ($strSplit as $index => $strType) {
+			foreach ($strSplitForum as $index => $strType) {
 				if ($index == 13 || $index == 7 || $index == 8) continue; // Don't include "Overall"
 				$strStart = explode($strType[0], $threadHTML); // Get everything after string, there should only be one anyway
 				if ($strStart[1] == null) { array_push($cont,null); continue; } // Was used for something else, decided to keep to prevent errors
@@ -82,12 +83,12 @@ class forum {
 				$cont[$index] =  $strTotal;
 			}
 			
-			if (strstr($threadHTML,"stickied")) $cont[7] = true;
+			if (strstr($threadHTML,"Sticky")) $cont[7] = true;
 			else $cont[7] = false;
-			if (strstr($threadHTML,"locked")) $cont[8] = true;
+			if (strstr($threadHTML,"Locked")) $cont[8] = true;
 			else $cont[8] = false;
 			
-			$threadObj = new threadView($cont[0],$cont[1],$cont[2],$cont[3],$cont[4],$cont[5],$cont[6]
+			$threadObj = new ThreadView($cont[0],$cont[1],$cont[2],$cont[3],$cont[4],$cont[5],$cont[6]
 			,$cont[7],$cont[8],$cont[9],$cont[10],$cont[11],$cont[12]);
 			
 			array_push($this->threadList, $threadObj);
@@ -95,13 +96,13 @@ class forum {
 	}
 	
 	function getAllThreads() { // Returns all threads. WILL RETURN FALSE IF NO THREADS
-		if (!$scanned) $this->scanPage(); // Scan page if not already
+		$this->scan(); // Scan page if not already
 		if ($this->threadList != null) return $this->threadList;
 		else return false;
 	}
 	
 	function getThread($i) { // Returns thread at index. WILL RETURN FALSE IF NO SUCH INDEX
-		if (!$scanned) $this->scanPage(); // Scan page if not already. You really shouldn't get an index without scanning the page first anyway...
+		$this->scan(); // Scan page if not already. You really shouldn't get an index without scanning the page first anyway...
 		if ($threadList[$i]) return $threadList[$i];
 		else return false;
 	}
@@ -109,7 +110,7 @@ class forum {
 
 }
 
-class threadView { // Not named "thread" as it many be confused with an actual thread content
+class ThreadView { // Not named "thread" as it many be confused with an actual thread content
 	
 	public $date;
 	public $author;
@@ -142,9 +143,5 @@ class threadView { // Not named "thread" as it many be confused with an actual t
 		$this->type = $type;
 	}
 }
-
-$f = new forum("http://shotbow.net/forum/forums/annihilation/");
-$f->getAllThreads();
-
 
 ?>
