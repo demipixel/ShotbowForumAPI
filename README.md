@@ -22,18 +22,18 @@ Returns ThreadView object from specific index. Return NULL if it does not exist.
 
 ##ThreadView
 ###Variables
-**date:** Time in Epoch
-**author:** Username of creator of thread
-**title:** Title of thread
-**replies:** # of replies
-**views:** # of views
-**replyAuthor:** Author of last post
-**replyDate:** Date of last post (Epoch)
-**authorId:** User ID of creator of thread
-**replyAuthorId:** Used ID of the last poster
-**stickied:** Boolean true or false if stickied
-**locked:** Boolean true or false if locked
-**id:** ID of the thread, needed for the Thread class
+**date:** Time in Epoch  
+**author:** Username of creator of thread  
+**title:** Title of thread  
+**replies:** # of replies  
+**views:** # of views  
+**replyAuthor:** Author of last post  
+**replyDate:** Date of last post (Epoch)  
+**authorId:** User ID of creator of thread  
+**replyAuthorId:** Used ID of the last poster  
+**stickied:** Boolean true or false if stickied  
+**locked:** Boolean true or false if locked  
+**id:** ID of the thread, needed for the Thread class  
 **type:** Type of post (Ex: Guide, Other, Video, Question, etc)
 
 #Thread
@@ -54,9 +54,9 @@ Returns Post object from specific index. Return NULL if it does not exist.
 
 ##Post
 ###Variables
-**date:** Date of creation
-**author:** Username of creator
-**authorId:** ID of creator
+**date:** Date of creation  
+**author:** Username of creator  
+**authorId:** ID of creator  
 **message:** Post message
 
 =====================================================
