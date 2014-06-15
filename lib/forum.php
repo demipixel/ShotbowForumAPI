@@ -89,7 +89,6 @@ class forum {
 			
 			$threadObj = new threadView($cont[0],$cont[1],$cont[2],$cont[3],$cont[4],$cont[5],$cont[6]
 			,$cont[7],$cont[8],$cont[9],$cont[10],$cont[11],$cont[12]);
-			echo $strSplit[10][0];
 			
 			array_push($this->threadList, $threadObj);
 		}
