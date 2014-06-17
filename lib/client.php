@@ -11,7 +11,7 @@ $strSplitClient[1] = "\"";
 
 class Client {
 	
-	private $file = "";
+	public $file = "";
 	private $currentQueue = "";
 	
 	function Client($username,$password) {
@@ -33,15 +33,15 @@ class Client {
 		
 		
 		$output = sendPost($url,$data); // Login from data above
-		echo $output;
 		if (strstr($output,"Incorrect password")) throw new Exception("Incorrect password for " . $username);
 		if (strstr($output,"The requested user")) throw new Exception("User " . $username . " was not found.");
 		$this->token = $this->getToken(); // Get token to use for rest of session
+		if (!$this->token) throw new Exception("Could not login");
 	}
 	
 	function readQueue() {
 		if ($this->file == null) throw new Exception("Cannot readQueue() without a file");
-		getLatest();
+		$this->getLatest();
 	}
 	
 	function getLatest() { 
@@ -55,9 +55,10 @@ class Client {
 			case 0: $this->postProfile($cmd[1],$cmd[2]); break;
 			case 1: $this->postThread($cmd[1],$cmd[2]); break;
 			case 2: $this->newThread($cmd[1],$cmd[2],$cmd[3]); break;
-			case 3: $this->newConvo($cmd[1],$cmd[2]); break;
+			case 3: $this->newConvo($cmd[1],$cmd[2],$cmd[3]); break;
 			case 4: $this->editProfilePost($cmd[1],$cmd[2]); break;
 			case 5: $this->editThreadPost($cmd[1],$cmd[2]); break;
+			case 6: $this->deleteThreadPost($cmd[1]); break;
 		}
 		
 	}
@@ -70,15 +71,17 @@ class Client {
 	}
 	
 	function postProfile($id,$message) {
+		$message = $this->replaceBr($message);
 		$url = "http://shotbow.net/forum/members/" . $id . "/post";
 		$data = Array(
 		'message' => $message,
 		'_xfToken' => $this->token);
 		$o = sendPost($url,$data);
-		return $this->security($o)
+		return $this->security($o);
 	}
 	
 	function postThread($id,$message) {
+		$message = $this->replaceBr($message);
 		$url = "http://shotbow.net/forum/threads/" . $id . "/add-reply";
 		$data = Array(
 		'message' => $message,
@@ -88,6 +91,7 @@ class Client {
 	}
 	
 	function newThread($title,$message,$section) {
+		$message = $this->replaceBr($message);
 		$url = "http://shotbow.net/forum/forums/" . $section . "/add-thread";
 		$data = Array(
 		'title' => $title,
@@ -97,10 +101,12 @@ class Client {
 		return $this->security($o);
 	}
 	
-	function newConvo($title,$users,$message) {
-		$url = "http://shotbow.net/forum/conversations/insert"
+	function newConvo($title,$userArray,$message) {
+		$message = $this->replaceBr($message);
+		$userListString = implode(",",$userArray);
+		$url = "http://shotbow.net/forum/conversations/insert";
 		$data = Array(
-		'recipients' => $users,
+		'recipients' => $userListString,
 		'title' => $title,
 		'message' => $message,
 		'_xfToken' => $this->token);
@@ -109,6 +115,7 @@ class Client {
 	}
 	
 	function editProfilePost($id,$message) {
+		$message = $this->replaceBr($message);
 		$url = "http://shotbow.net/forum/profile-posts/" . $id . "/save";
 		$data = Array(
 		'message' => $message,
@@ -118,20 +125,34 @@ class Client {
 	}
 	
 	function editThreadPost($id,$message) {
+		$message = $this->replaceBr($message);
 		$url = "http://shotbow.net/forum/posts/" . $id . "/save";
 		$data = Array(
 		'message' => $message,
 		'_xfToken' => $this->token);
 		$o = sendPost($url,$data);
-		return $this->security($o)
+		return $this->security($o);
+	}
+	
+	function deleteThreadPost($postId) {
+		$url = "http://shotbow.net/forum/posts/" . $id . "/delete";
+		$data = Array(
+		'_xfConfirm' => 1,
+		'_xfToken' => $this->token);
+		$o = sendPost($url,$data);
+		return $this->security($o);
 	}
 	
 	function security($o) {
-		if (strstr($o,"seconds before performing this action.") {
+		if (strstr($o,"seconds before performing this action.")) {
 			restoreLatest();
 			return false;
 		}
 		return true;
+	}
+	
+	function replaceBr($string) {
+		return str_replace("[br]","\n",$string);
 	}
 	
 	function getToken() {

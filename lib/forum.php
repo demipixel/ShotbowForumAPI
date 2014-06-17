@@ -7,8 +7,8 @@ for ($i=0;$i<10;$i++) { // 9 for all variables of threadView
 }
 /*
 MAIN:
-0 = dateDiff, 1 = author, 2 = title, 3 = replies,
-4 = views, 5 = replyAuthor, 6 = replyDate,
+0 = date, 1 = author, 2 = title, 3 = replies,
+4 = views, 5 = replyAuthor, 6 = (reply author date) OUTDATED,
 7 = stickied, 8 = locked, 9 = ID, 
 10 = Author ID, 11 = Reply Author ID, 
 12 = Type, 13 = Overall thread
@@ -17,8 +17,8 @@ SECONDARY: 0 = Before, 1 = After
 
 */
 
-$strSplitForum[0][0] = "data-diff=\""; // Data-Diff since there is no display for "data-time"
-$strSplitForum[0][1] = "\""; 
+$strSplitForum[0][0] = "M\">"; // Data-Diff since there is no display for "data-time"
+$strSplitForum[0][1] = "<"; 
 $strSplitForum[1][0] = "title=\"Thread starter\">";
 $strSplitForum[1][1] = "<";
 $strSplitForum[2][0] = "/preview\">";
@@ -29,8 +29,8 @@ $strSplitForum[4][0] = "Views:</dt> <dd>";
 $strSplitForum[4][1] = "<";
 $strSplitForum[5][0] = "class=\"username\">";
 $strSplitForum[5][1] = "<";
-$strSplitForum[6][0] = "data-time=\"";
-$strSplitForum[6][1] = "\"";
+$strSplitForum[6][0] = "";
+$strSplitForum[6][1] = "";
 $strSplitForum[7][0] = ""; // Not used since determined by strstr()
 $strSplitForum[7][1] = ""; //
 $strSplitForum[8][0] = ""; //
@@ -49,7 +49,7 @@ $strSplitForum[13][1] = "</li>";
 class Forum {
 	
 	private $url = ""; // Stores page it's getting data from. Use a new forum object for new pages
-	private $threadList = Array(); // Array of threadView objects
+	private $threads = Array(); // Array of threadView objects
 	private $scanned = false;
 	
 	function forum($url) {
@@ -75,13 +75,29 @@ class Forum {
 			if (strstr($threadHTML,"Redirect")) continue;
 			
 			foreach ($strSplitForum as $index => $strType) {
-				if ($index == 13 || $index == 7 || $index == 8) continue; // Don't include "Overall"
+				if ($index == 13 || $index == 7 || $index == 8 || $index == 6) continue; // Don't include "Overall"
 				$strStart = explode($strType[0], $threadHTML); // Get everything after string, there should only be one anyway
 				if ($strStart[1] == null) { array_push($cont,null); continue; } // Was used for something else, decided to keep to prevent errors
 				$strEnd = explode($strType[1], $strStart[1]); // Scrape off ending
 				$strTotal = $strEnd[0]; // Finish product
 				$cont[$index] =  $strTotal;
 			}
+			
+			// DATES N STUFF
+			
+			$timezone = 'US/Central';
+			
+			$dateArray = explode($strSplitForum[0][0],$threadHTML);
+			$createDateEnd = $dateArray[1];
+			$replyDateEnd = $dateArray[2];
+			$createDate = explode($strSplitForum[0][1],$createDateEnd);
+			$replyDate = explode($strSplitForum[0][1],$replyDateEnd);
+			$createDate = new DateTime(str_replace("at ","",$createDate[0]),new DateTimeZone($timezone));
+			$replyDate = new DateTime(str_replace("at ","",$replyDate[0]),new DateTimeZone($timezone));
+			$cont[0] = date_format($createDate,'U');
+			$cont[6] = date_format($replyDate,'U');
+			
+			////////
 			
 			if (strstr($threadHTML,"Sticky")) $cont[7] = true;
 			else $cont[7] = false;
@@ -91,20 +107,38 @@ class Forum {
 			$threadObj = new ThreadView($cont[0],$cont[1],$cont[2],$cont[3],$cont[4],$cont[5],$cont[6]
 			,$cont[7],$cont[8],$cont[9],$cont[10],$cont[11],$cont[12]);
 			
-			array_push($this->threadList, $threadObj);
+			array_push($this->threads, $threadObj);
 		}
 	}
 	
 	function getAllThreads() { // Returns all threads. WILL RETURN FALSE IF NO THREADS
 		$this->scan(); // Scan page if not already
-		if ($this->threadList != null) return $this->threadList;
+		if ($this->threads != null) return $this->threads;
 		else return false;
 	}
 	
 	function getThread($i) { // Returns thread at index. WILL RETURN FALSE IF NO SUCH INDEX
 		$this->scan(); // Scan page if not already. You really shouldn't get an index without scanning the page first anyway...
-		if ($threadList[$i]) return $threadList[$i];
+		if ($threads[$i]) return $threads[$i];
 		else return null;
+	}
+	
+	function getTrackerThreads($tracker) { // You don't NEED this if you're using getTrackerPosts() but might as well since
+		$this->scan();
+		$time = $tracker->getDat(); //////////// it's good for speed and stuff...
+		$thArray = Array();
+		foreach ($this->threads as $index => $tr) {
+			if ($tr->replyDate > $time) array_push($thArray,$tr);
+		}
+		return $thArray;
+	}
+	
+	function getLatest() {
+		$time = 0;
+		foreach ($this->threads as $tr) {
+			if ($tr->replyDate > $time) $time = $tr->replyDate;
+		}
+		return $time;
 	}
 	
 
@@ -127,8 +161,8 @@ class ThreadView { // Not named "thread" as it many be confused with an actual t
 	public $type; // CAN BE NULL if no type set
 	
 	
-	function threadView($dateDiff,$author,$title,$replies,$views,$replyAuthor,$replyDate,$stickied,$locked,$id,$authorId,$replyAuthorId,$type) {
-		$this->date = (int)$replyDate - (int)$dateDiff;
+	function threadView($date,$author,$title,$replies,$views,$replyAuthor,$replyDate,$stickied,$locked,$id,$authorId,$replyAuthorId,$type) {
+		$this->date = (int)$date;
 		$this->author = $author;
 		$this->title = $title;
 		$this->replies = (int)str_replace(",","",$replies);

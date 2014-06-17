@@ -1,6 +1,5 @@
 <?
 
-include "./client.php";
 
 
 class Queue {
@@ -32,8 +31,7 @@ class Queue {
 	}
 	
 	function newConvo($title,$userArray,$message) {
-		$userListString = implode(",",$userArray);
-		$this->toQueue(Array(3,$title,$userListString,$message));
+		$this->toQueue(Array(3,$title,$userArray,$message));
 	}
 	
 	function editProfilePost($id,$message) {
@@ -42,6 +40,10 @@ class Queue {
 	
 	function editThreadPost($id,$message) {
 		$this->toQueue(Array(5,$id,$message));
+	}
+	
+	function deleteThreadPost($postId) {
+		$this->toQueue($postId);
 	}
 	
 }

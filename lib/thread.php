@@ -9,7 +9,7 @@ for ($i=0;$i<5;$i++) { // 9 for all variables of threadView
 }
 /*
 MAIN:
-0 = Overall, 1 = date, 2 = author, 
+0 = Overall, 1 = time, 2 = author, 
 3 = authorId, 4 = message
 
 SECONDARY: 0 = Before, 1 = After
@@ -65,6 +65,20 @@ class Thread {
 		$this->scan();
 		if ($this->posts[$i]) return $this->posts[$i];
 		else return null;
+	}
+	
+	function getTrackerPosts($tracker) {
+		$this->scan();
+		$time = $tracker->getDat();
+		$trackPosts = Array();
+		foreach ($this->posts as $p) {
+			if ($p->time > $time) array_push($trackPosts,$p);
+		}
+		return $trackPosts;
+	}
+	
+	function getLatestTime() {
+		return $this->posts[count($this->posts)-1]->time;
 	}
 	
 }
@@ -129,17 +143,18 @@ class Page {
 		return $this->nextButton;
 	}
 	
+	
 }
 
 class Post {
 	
-	public $date = 0;
+	public $time = 0;
 	public $author = "";
 	public $authorId = 0;
 	public $message = "";
 	
-	function Post($d,$a,$aI,$m) {
-		$this->date = $d;
+	function Post($t,$a,$aI,$m) {
+		$this->time = $t;
 		$this->author = $a;
 		$this->authorId = $aI;
 		$this->message = $m;
