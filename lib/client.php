@@ -13,12 +13,14 @@ class Client {
 	
 	public $file = "";
 	private $currentQueue = "";
+	private $username = "";
 	
 	function Client($username,$password) {
 		$this->login($username,$password);
 	}
 	
 	function login($username,$password) {
+		$this->username = $username;
 		$ckfile = tempnam ($ckfileLoc, "CURLCOOKIE");
 		$url = 'http://shotbow.net/forum/login/login';
 		$data = array(
@@ -59,6 +61,8 @@ class Client {
 			case 4: $this->editProfilePost($cmd[1],$cmd[2]); break;
 			case 5: $this->editThreadPost($cmd[1],$cmd[2]); break;
 			case 6: $this->deleteThreadPost($cmd[1]); break;
+			case 7: $this->postConvo($cmd[1],$cmd[2]); break;
+			default: throw new Exception("Command type " . $cmd[0] . " for client " . $this->username . " does not exists!"); break;
 		}
 		
 	}
@@ -114,6 +118,15 @@ class Client {
 		return $this->security($o);
 	}
 	
+	function postConvo($id,$message) {
+		$url = "http://shotbow.net/forum/conversations/" . $id . "/insert-reply";
+		$data = Array(
+		'message' => $message,
+		'_xfToken' => $this->token);
+		$o = sendPost($url,$data);
+		return $this->security($o);
+	}
+	
 	function editProfilePost($id,$message) {
 		$message = $this->replaceBr($message);
 		$url = "http://shotbow.net/forum/profile-posts/" . $id . "/save";
@@ -145,7 +158,7 @@ class Client {
 	
 	function security($o) {
 		if (strstr($o,"seconds before performing this action.")) {
-			restoreLatest();
+			$this->restoreLatest();
 			return false;
 		}
 		return true;

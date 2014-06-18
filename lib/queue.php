@@ -34,6 +34,10 @@ class Queue {
 		$this->toQueue(Array(3,$title,$userArray,$message));
 	}
 	
+	function postConvo($id,$message) {
+		$this->toQueue(Array(7,$id,$message));
+	}
+	
 	function editProfilePost($id,$message) {
 		$this->toQueue(Array(4,$id,$message));
 	}
@@ -43,7 +47,7 @@ class Queue {
 	}
 	
 	function deleteThreadPost($postId) {
-		$this->toQueue($postId);
+		$this->toQueue(6,$postId);
 	}
 	
 }
