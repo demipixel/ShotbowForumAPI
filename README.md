@@ -64,15 +64,9 @@ Returns Post object from specific index. Return NULL if it does not exist.
 
 
 ##THINGS TO BE DONE:
-- Logging in
-- Page, Thread, and Post Objects
-- Sending private message
 - Posting on profile page
-- Posting on thread
-- Getting thread data
-- Getting forum data
-- Setup Queue
-- Read Queue
+- Reading Profile Pages
+- Cleanup and make stuff work better
 
 ##THINGS MAYBE TO BE DONE:
 - Getting post likes
